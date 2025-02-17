@@ -15,6 +15,7 @@ class ManageDuEvalins extends ManageRecords
         return [
             Actions\CreateAction::make()
                 ->icon('heroicon-o-plus')
+                ->createAnother(false)
                 ->label('Tambah'),
         ];
     }

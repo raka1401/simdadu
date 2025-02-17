@@ -88,6 +88,9 @@ class DuPendukungDakinResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                return $query->where('tahun_id', session('selected_tahun'));
+            })
             ->emptyStateHeading('Belum ada data')
             ->groups([
                 Group::make('user.subBidang.dm_bidang.nama')
@@ -99,7 +102,7 @@ class DuPendukungDakinResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.subBidang.nama')
                     ->label('Bidang'),
-                Tables\Columns\TextColumn::make('tahun.nama'),
+                // Tables\Columns\TextColumn::make('tahun.nama'),
                 Tables\Columns\TextColumn::make('jenis_dokumen.nama')
                     ->label('Jenis Dokumen'),
                 Tables\Columns\TextColumn::make('perangkat_daerah.nama')
@@ -145,7 +148,7 @@ class DuPendukungDakinResource extends Resource
                         ]);
                     }),
                     Tables\Actions\EditAction::make()
-                    ->hidden(fn ($record) => Auth::id() !== $record->user_id)
+                    ->hidden(fn ($record) => !Auth::user()->hasRole(['super_admin','admin']) && Auth::id() !== $record->user_id)
                     ->iconButton()
                     ->color('warning')
                     ->mutateFormDataUsing(function (array $data, $record) {
@@ -163,7 +166,7 @@ class DuPendukungDakinResource extends Resource
                     }),
                 Tables\Actions\DeleteAction::make()
                     ->iconButton()
-                    ->hidden(fn ($record) => Auth::id() !== $record->user_id)
+                    ->hidden(fn ($record) => !Auth::user()->hasRole(['super_admin','admin']) && Auth::id() !== $record->user_id)
                     ->before(function ($record) {
                         if ($record->pdf) {
                             \Illuminate\Support\Facades\Storage::disk('public')->delete($record->pdf);
