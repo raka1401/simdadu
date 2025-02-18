@@ -2,20 +2,21 @@
 
 @config 'tailwind.config.js';
 
-.fi-simple-layout { 
+.fi-simple-layout {
     /* @apply bg-cyan-100/50; */
-    background-image : url('/public/gambar/bg-login2.jpg');
-    background-repeat : no-repeat;
-    background-size : cover;
+    background-image: url('/public/gambar/bg-login.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
     position: relative;
 }
- 
+
 .fi-simple-main {
-    /* @apply bg-transparent dark:bg-transparent; */
-} 
+    @apply bg-transparent dark:bg-transparent;
+}
 
 .fi-sidebar {
     @apply bg-gray-500 dark:bg-gray-950;
+    z-index: 20 !important;
 }
 
 .fi-sidebar-nav {
@@ -23,35 +24,45 @@
 }
 
 
- 
 .filament-sidebar-nav .border-t {
     @apply border-primary-600;
 }
- 
+
 .filament-sidebar-item {
     @apply text-red-600;
 }
- 
+
 .filament-sidebar-item .inline-flex {
     @apply text-primary-50 bg-primary-700 dark:bg-gray-900 dark:text-white;
 }
- 
+
 .filament-sidebar-group svg {
     @apply text-primary-300;
 }
- 
+
 .tracking-wider {
     @apply text-sm text-primary-200;
 }
- 
+
 .filament-brand {
     @apply text-primary-700;
 }
- 
+
 .filament-main {
     @apply bg-primary-50 dark:bg-gray-900 dark:border-gray-700;
 }
- 
+
 .filament-main-content {
     @apply text-gray-600 dark:text-gray-400;
+}
+
+.fi-main {
+    padding-bottom: 3rem !important;
+    @screen sm {
+        padding-bottom: 4rem !important;
+    }
+}
+
+.fi-topbar {
+    z-index: 20 !important;
 }

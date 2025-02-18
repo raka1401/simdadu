@@ -15,7 +15,8 @@ class ManageDuPendukungDakins extends ManageRecords
         return [
             Actions\CreateAction::make()
                 ->icon('heroicon-o-plus')
-                ->label('Tambah'),
+                ->label('Tambah')
+                ->createAnother(false),
         ];
     }
 }

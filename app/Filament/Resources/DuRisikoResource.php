@@ -2,33 +2,32 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\DuIkiResource\Pages;
-use App\Filament\Resources\DuIkiResource\RelationManagers;
+use App\Filament\Resources\DuRisikoResource\Pages;
+use App\Filament\Resources\DuRisikoResource\RelationManagers;
 use App\Models\dm_sub_bidang;
-use App\Models\DuIki;
+use App\Models\DuRisiko;
 use App\Models\Tahun;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\Unique;
 
-class DuIkiResource extends Resource
+class DuRisikoResource extends Resource
 {
-    protected static ?string $model = DuIki::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-user-plus';
+    protected static ?string $modelLabel = 'Manajemen Risiko';
+    protected static ?string $model = DuRisiko::class;
+    protected static ?string $label = 'Manajemen Risiko';
+    protected static ?string $pluralModelLabel = 'Manajemen Risiko';
     protected static ?string $navigationGroup = 'Data Dukung';
-    protected static ?string $modelLabel = 'Indikator Kinerja Individu';
-    protected static ?string $pluralModelLabel = 'Indikator Kinerja Individu';
+
+    protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
 
     public static function form(Form $form): Form
     {
@@ -44,31 +43,39 @@ class DuIkiResource extends Resource
                     ->options(function (): array {
                         return Tahun::where('status', '=',  '1')->pluck('nama', 'id')->toArray();
                     })
-                    ->columnSpan(2)
                     ->label('Tahun')
                     ->live()
-                    ->unique(modifyRuleUsing: function (Unique $rule, callable $get) {
-                        return $rule 
-                            ->where('tahun_id', $get('tahun_id'))
-                            ->where('user_id', $get('user_id'));
-                    }, ignoreRecord: true)
-                    ->validationMessages([
-                        'unique' => 'Iki anda sudah ada sebelumnya.',
-                    ])
                     ->required(),
+                Forms\Components\Select::make('kategori')
+                    ->options([
+                        'Register Risiko' => 'Register Risiko',
+                        'Fraud Risiko' => 'Fraud Risiko',
+                    ])
+                    ->live(),
                 Forms\Components\FileUpload::make('pdf')
-                    ->nullable()
-                    ->columnSpan(2)
+                    ->label('PDF')
                     ->acceptedFileTypes(['application/pdf'])
-                    ->getUploadedFileNameForStorageUsing(fn (Get $get): string => Auth::user()->name . '.pdf')
+                    ->columnSpan(2)
+                    ->getUploadedFileNameForStorageUsing(fn (Get $get): string => $get('kategori') . '.pdf')
                     ->disk('public')
                     ->directory(fn (Get $get): string => 
-                        'iki/' . 
+                        'risiko/' . 
+                        Tahun::find($get('tahun_id'))->nama . 
+                        '/' . 
+                        dm_sub_bidang::find($get('sub_bidang_id'))->nama),
+                Forms\Components\FileUpload::make('excel')
+                    ->label('Excel')
+                    ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
+                    ->columnSpan(2)
+                    ->getUploadedFileNameForStorageUsing(fn (Get $get): string => $get('kategori') . '.xlsx')
+                    ->disk('public')
+                    ->directory(fn (Get $get): string => 
+                        'risiko/' . 
                         Tahun::find($get('tahun_id'))->nama . 
                         '/' . 
                         dm_sub_bidang::find($get('sub_bidang_id'))->nama),
             ]);
-    }
+    } 
 
     public static function table(Table $table): Table
     {
@@ -76,7 +83,7 @@ class DuIkiResource extends Resource
             ->modifyQueryUsing(function (Builder $query) {
                 return $query->where('tahun_id', session('selected_tahun'));
             })
-            ->emptyStateHeading('Belum ada data')
+            ->emptyStateHeading('Belum Ada Data')
             ->groups([
                 Group::make('user.subBidang.dm_bidang.nama')
                     ->label('Bidang')
@@ -85,16 +92,26 @@ class DuIkiResource extends Resource
             ->groupingSettingsHidden()
             ->defaultGroup('user.subBidang.dm_bidang.nama')
             ->columns([
-                // Tables\Columns\TextColumn::make('tahun.nama')
-                //     ->searchable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Nama')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('user.subBidang.nama')
+                    ->label('Bidang'),
+                Tables\Columns\TextColumn::make('kategori')
+                    ->label('Kategori'),
+                Tables\Columns\TextColumn::make('kategori')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Register Risiko' => 'primary',
+                        'Fraud Risiko' => 'warning',
+                    }),
                 Tables\Columns\IconColumn::make('pdf')
                     ->boolean()
                     ->default(0)
                     ->url(fn ($record) => $record->pdf ? Storage::url($record->pdf) : null)
                     ->openUrlInNewTab(),
+                Tables\Columns\IconColumn::make('excel')
+                    ->boolean()
+                    ->default(0)
+                    ->url(fn ($record) => $record->excel ? Storage::url($record->excel) : null)
+                    ->openUrlInNewTab(), 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -102,9 +119,10 @@ class DuIkiResource extends Resource
                         'perlu perbaikan' => 'warning',
                         'telah diverifikasi' => 'success',
                     }),
-                Tables\Columns\TextColumn::make('keterangan')
+                Tables\Columns\TextColumn::make('keterangan')   
             ])
             ->filters([
+                //
             ])
             ->actions([
                 Tables\Actions\Action::make('Verifikasi')
@@ -112,7 +130,7 @@ class DuIkiResource extends Resource
                     ->color('success')
                     ->icon('heroicon-o-paper-clip')
                     ->hidden(fn ($record) => !Auth::user()->hasRole(['super_admin','admin','verifikator']))
-                    ->fillForm(fn (DuIki $record): array => [
+                    ->fillForm(fn (DuRisiko $record): array => [
                         'status' => $record->status,
                         'keterangan' => $record->keterangan
                     ])
@@ -140,28 +158,36 @@ class DuIkiResource extends Resource
                                 \Illuminate\Support\Facades\Storage::disk('public')->delete($record->pdf);
                             }
                         }
+                        if (isset($data['excel']) && $data['excel'] !== $record->excel) {
+                            if ($record->excel) {
+                                \Illuminate\Support\Facades\Storage::disk('public')->delete($record->excel);
+                            }
+                        }
                         return $data;
                     }),
                 Tables\Actions\DeleteAction::make()
-                    ->hidden(fn ($record) => !Auth::user()->hasRole(['super_admin','admin']) && Auth::id() !== $record->user_id)
                     ->iconButton()
+                    ->hidden(fn ($record) => !Auth::user()->hasRole(['super_admin','admin']) && Auth::id() !== $record->user_id)
                     ->before(function ($record) {
                         if ($record->pdf) {
                             \Illuminate\Support\Facades\Storage::disk('public')->delete($record->pdf);
                         }
+                        if ($record->excel) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($record->excel);
+                        }
                     }),
             ])
             ->bulkActions([
-                // Tables\Actions\BulkActionGroup::make([
-                //     Tables\Actions\DeleteBulkAction::make(),
-                // ]),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageDuIkis::route('/'),
+            'index' => Pages\ManageDuRisikos::route('/'),
         ];
     }
 }

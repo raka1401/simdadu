@@ -43,7 +43,8 @@ class UsersResource extends Resource
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->revealable()
-                    ->dehydrated(false)
+                    ->required()
+                    // ->dehydrated(false)
                     ->maxLength(255),
                 Forms\Components\CheckboxList::make('roles')
                     ->required()

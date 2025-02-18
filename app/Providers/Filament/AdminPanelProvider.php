@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\login;
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\DuKakResource\Widgets\kakStat;
 use App\Filament\Resources\DuRenaksiResource\Widgets\RenaksiStat;
 use App\Filament\Resources\DuRenaksiResource\Widgets\RenaksiView;
@@ -33,8 +33,8 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('')
-            ->login(login::class)
+            ->path('admins')
+            ->login(Login::class)
             ->colors([
                 'danger' => Color::Rose,
                 'gray' => Color::Gray,
@@ -90,10 +90,19 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->profile(isSimple: false)
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->brandName('SIMDADU')
-            ->brandLogo(asset('gambar/simdadu.png'))
-            ->brandLogoHeight('3rem')
+            ->brandName('SI-PENDAKI')
+            ->brandLogo(asset('gambar/sipendaki-white.png'))
+            ->darkModeBrandLogo(asset('gambar/sipendaki-black.png'))
+            ->brandLogoHeight('4rem')
             ->favicon(asset('gambar/paser.png'))
+            ->renderHook(
+                'panels::user-menu.before',
+                fn () => view('filament.hooks.show-selected-year')
+            )
+            ->renderHook(
+                'panels::footer',
+                fn () => request()->routeIs('filament.admin.auth.login') ? '' : view('filament.footer')
+            )
             ;
     }
 }

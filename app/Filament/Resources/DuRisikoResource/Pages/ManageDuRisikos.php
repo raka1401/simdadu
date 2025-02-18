@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\DuRenaksiResource\Pages;
+namespace App\Filament\Resources\DuRisikoResource\Pages;
 
-use App\Filament\Resources\DuRenaksiResource;
+use App\Filament\Resources\DuRisikoResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
-class ManageDuRenaksis extends ManageRecords
+class ManageDuRisikos extends ManageRecords
 {
-    protected static string $resource = DuRenaksiResource::class;
+    protected static string $resource = DuRisikoResource::class;
 
     protected function getHeaderActions(): array
     {
